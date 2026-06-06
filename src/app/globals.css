@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..900;1,9..40,100..900&family=DM+Mono:wght@300;400;500&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap'); */
+
+/* =====================================================
+   CSS DESIGN TOKENS
+   ===================================================== */
+:root {
+  --background: 222 47% 4%;
+  --foreground: 213 31% 91%;
+  --card: 222 47% 6%;
+  --card-foreground: 213 31% 91%;
+  --popover: 222 47% 5%;
+  --popover-foreground: 213 31% 91%;
+  --primary: 221 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 47% 10%;
+  --secondary-foreground: 213 31% 91%;
+  --muted: 222 47% 12%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 222 47% 11%;
+  --input: 222 47% 10%;
+  --ring: 221 100% 50%;
+  --radius: 0.75rem;
+
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* Spacing scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+}
+
+/* =====================================================
+   RESET & BASE
+   ===================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: #030712;
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* =====================================================
+   SCROLLBAR
+   ===================================================== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #060d1f; }
+::-webkit-scrollbar-thumb { background: #1a2744; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #0066ff; }
+
+::selection { background: rgba(0,102,255,0.3); color: #fff; }
+:focus-visible { outline: 2px solid rgba(0,102,255,0.6); outline-offset: 2px; border-radius: 4px; }
+
+/* =====================================================
+   COMPONENT LAYER
+   ===================================================== */
+@layer components {
+
+  /* --- Glassmorphism --- */
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .glass-md {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .glass-card {
+    background: linear-gradient(135deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.01) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4),inset 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  /* --- Gradient Text --- */
+  .gradient-text {
+    background: linear-gradient(135deg,#60b0ff 0%,#2196ff 30%,#8b5cf6 70%,#22d3ee 100%);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .gradient-text-warm {
+    background: linear-gradient(135deg,#fff 0%,#a3d2ff 50%,#8b5cf6 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* --- Gradient Borders --- */
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(#030712,#030712) padding-box,
+                linear-gradient(135deg,rgba(0,102,255,0.5),rgba(124,58,237,0.5)) border-box;
+    border: 1px solid transparent;
+  }
+
+  /* --- Glow Effects --- */
+  .glow-blue  { box-shadow: 0 0 30px rgba(0,102,255,0.35),0 0 60px rgba(0,102,255,0.15); }
+  .glow-purple { box-shadow: 0 0 30px rgba(124,58,237,0.35),0 0 60px rgba(124,58,237,0.15); }
+  .glow-cyan  { box-shadow: 0 0 30px rgba(34,211,238,0.35),0 0 60px rgba(34,211,238,0.15); }
+  .text-glow-blue { text-shadow: 0 0 30px rgba(0,102,255,0.8),0 0 60px rgba(0,102,255,0.4); }
+
+  /* --- Buttons --- */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white transition-all duration-300 select-none;
+    background: linear-gradient(135deg,#0066ff,#7c3aed);
+    box-shadow: 0 0 0 1px rgba(0,102,255,0.3),0 4px 20px rgba(0,102,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(0,102,255,0.5),0 8px 30px rgba(0,102,255,0.45),0 0 60px rgba(124,58,237,0.2); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+
+  .btn-ghost {
+    @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white/70 transition-all duration-300 select-none;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); color: #fff; transform: translateY(-1px); }
+
+  .btn-danger {
+    @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-red-300 transition-all duration-300;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); }
+
+  /* --- Badge --- */
+  .badge-enterprise {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase;
+    background: rgba(0,102,255,0.1);
+    border: 1px solid rgba(0,102,255,0.25);
+    color: #60b0ff;
+  }
+
+  /* --- Layout Helpers --- */
+  .section-padding { @apply py-24 px-4 sm:px-6 lg:px-8; }
+  .container-enterprise { @apply max-w-7xl mx-auto; }
+  .page-header { @apply mb-8 pb-6 border-b border-white/[0.06]; }
+
+  /* --- Animated Grid --- */
+  .animated-grid {
+    background-image: linear-gradient(rgba(0,102,255,0.035) 1px,transparent 1px),
+                      linear-gradient(90deg,rgba(0,102,255,0.035) 1px,transparent 1px);
+    background-size: 60px 60px;
+    animation: gridScroll 20s linear infinite;
+  }
+  @keyframes gridScroll { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+
+  /* --- Skeleton Loader --- */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite;
+  }
+
+  /* --- Table styles --- */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead tr { @apply border-b border-white/[0.06]; }
+  .data-table thead th { @apply text-left text-[10px] uppercase tracking-widest text-white/25 px-4 py-3 font-semibold; }
+  .data-table tbody tr { @apply border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors; }
+  .data-table tbody td { @apply px-4 py-3 text-white/70; }
+
+  /* --- Status badge --- */
+  .status-active   { @apply text-emerald-400; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+  .status-pending  { @apply text-amber-400; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); }
+  .status-inactive { @apply text-white/40; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+  .status-danger   { @apply text-red-400; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+
+  /* --- Dashboard card --- */
+  .dash-card {
+    @apply glass-card rounded-2xl p-5 transition-all duration-300;
+  }
+  .dash-card:hover { border-color: rgba(255,255,255,0.12); }
+
+  /* --- Sidebar item --- */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer w-full;
+    color: rgba(255,255,255,0.5);
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.85); }
+  .sidebar-item.active { background: rgba(0,102,255,0.12); color: #fff; border: 1px solid rgba(0,102,255,0.2); }
+}
+
+/* =====================================================
+   UTILITY LAYER
+   ===================================================== */
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .text-balance { text-wrap: balance; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* =====================================================
+   ANIMATIONS
+   ===================================================== */
+.animate-in { animation: slideUp 0.6s ease-out both; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+.delay-75  { animation-delay: 75ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* =====================================================
+   THREE.JS CANVAS
+   ===================================================== */
+canvas { display: block; }

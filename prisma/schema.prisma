@@ -1,0 +1,661 @@
+// ============================================================
+// 4UCS Platform — Prisma Schema
+// Production-ready relational schema for the full SaaS platform
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── ENUMS ───────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  SALES
+  MARKETING
+  CLIENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+  ARCHIVED
+}
+
+enum DealStage {
+  PROSPECT
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+  TASK
+  FOLLOW_UP
+  DEMO
+  PROPOSAL_SENT
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignType {
+  EMAIL
+  SMS
+  SOCIAL
+  CONTENT
+  WEBINAR
+  EVENT
+}
+
+enum ClientStatus {
+  PROSPECT
+  ONBOARDING
+  ACTIVE
+  AT_RISK
+  CHURNED
+  SUSPENDED
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETE
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionPlan {
+  GROWTH
+  ENTERPRISE
+  GLOBAL
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+// ── MODELS ──────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          Role      @default(CLIENT)
+  avatar        String?
+  phone         String?
+  timezone      String    @default("UTC")
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  assignedLeads     Lead[]           @relation("AssignedLeads")
+  createdLeads      Lead[]           @relation("CreatedLeads")
+  assignedDeals     Deal[]           @relation("AssignedDeals")
+  activities        Activity[]
+  assignedTickets   Ticket[]         @relation("AssignedTickets")
+  createdTickets    Ticket[]         @relation("CreatedTickets")
+  ticketComments    TicketComment[]
+  campaignsCreated  Campaign[]
+  documents         Document[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  clientProfile     ClientUser?
+
+  @@map("users")
+}
+
+model ClientUser {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  clientId   String
+  role       String   @default("member") // admin | member | viewer
+  createdAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_users")
+}
+
+// ── CRM / LEADS ─────────────────────────────────────────────
+
+model Lead {
+  id            String     @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  company       String?
+  industry      String?
+  website       String?
+  country       String?
+  source        String?    // website | referral | social | event | cold
+  status        LeadStatus @default(NEW)
+  score         Int        @default(0)
+  notes         String?
+  estimatedValue Float?
+  assignedToId  String?
+  createdById   String
+  convertedAt   DateTime?
+  convertedToDealId String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  assignedTo    User?      @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  createdBy     User       @relation("CreatedLeads", fields: [createdById], references: [id])
+  activities    Activity[]
+  tags          LeadTag[]
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([email])
+  @@map("leads")
+}
+
+model LeadTag {
+  id     String @id @default(cuid())
+  leadId String
+  tag    String
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, tag])
+  @@map("lead_tags")
+}
+
+// ── SALES / DEALS ────────────────────────────────────────────
+
+model Deal {
+  id           String    @id @default(cuid())
+  title        String
+  value        Float
+  currency     String    @default("USD")
+  stage        DealStage @default(PROSPECT)
+  probability  Int       @default(20) // 0-100
+  expectedClose DateTime?
+  closedAt     DateTime?
+  assignedToId String?
+  clientId     String?
+  notes        String?
+  lostReason   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  assignedTo   User?     @relation("AssignedDeals", fields: [assignedToId], references: [id])
+  client       Client?   @relation(fields: [clientId], references: [id])
+  activities   Activity[]
+  products     DealProduct[]
+
+  @@index([stage])
+  @@index([assignedToId])
+  @@map("deals")
+}
+
+model DealProduct {
+  id       String @id @default(cuid())
+  dealId   String
+  name     String
+  quantity Int    @default(1)
+  price    Float
+  discount Float  @default(0)
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@map("deal_products")
+}
+
+// ── ACTIVITIES ───────────────────────────────────────────────
+
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  title       String
+  description String?
+  outcome     String?
+  dueAt       DateTime?
+  completedAt DateTime?
+  duration    Int?         // minutes
+  userId      String
+  leadId      String?
+  dealId      String?
+  ticketId    String?
+  clientId    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user     User    @relation(fields: [userId], references: [id])
+  lead     Lead?   @relation(fields: [leadId], references: [id])
+  deal     Deal?   @relation(fields: [dealId], references: [id])
+  ticket   Ticket? @relation(fields: [ticketId], references: [id])
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  @@index([userId])
+  @@index([leadId])
+  @@index([dealId])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+// ── MARKETING ────────────────────────────────────────────────
+
+model Campaign {
+  id           String         @id @default(cuid())
+  name         String
+  type         CampaignType
+  status       CampaignStatus @default(DRAFT)
+  subject      String?
+  body         String?
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  createdById  String
+  segmentId    String?
+  budget       Float?
+  spent        Float          @default(0)
+  impressions  Int            @default(0)
+  clicks       Int            @default(0)
+  conversions  Int            @default(0)
+  opens        Int            @default(0)
+  bounces      Int            @default(0)
+  unsubscribes Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  createdBy User      @relation(fields: [createdById], references: [id])
+  segment   Segment?  @relation(fields: [segmentId], references: [id])
+  recipients CampaignRecipient[]
+  funnelSteps FunnelStep[]
+
+  @@index([status])
+  @@index([createdById])
+  @@map("campaigns")
+}
+
+model Segment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  filters     Json     // { industry: [...], plan: [...], status: [...] }
+  count       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+model CampaignRecipient {
+  id          String    @id @default(cuid())
+  campaignId  String
+  email       String
+  name        String?
+  status      String    @default("pending") // pending | sent | opened | clicked | bounced | unsubscribed
+  sentAt      DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, email])
+  @@map("campaign_recipients")
+}
+
+model FunnelStep {
+  id         String   @id @default(cuid())
+  campaignId String
+  step       String
+  visitors   Int      @default(0)
+  conversions Int     @default(0)
+  order      Int
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("funnel_steps")
+}
+
+// ── CLIENTS ──────────────────────────────────────────────────
+
+model Client {
+  id           String           @id @default(cuid())
+  name         String
+  industry     String?
+  website      String?
+  country      String?
+  phone        String?
+  address      String?
+  logo         String?
+  status       ClientStatus     @default(ONBOARDING)
+  plan         SubscriptionPlan @default(GROWTH)
+  mrr          Float            @default(0)
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relations
+  users         ClientUser[]
+  projects      Project[]
+  tickets       Ticket[]
+  invoices      Invoice[]
+  subscriptions Subscription[]
+  deals         Deal[]
+  activities    Activity[]
+  documents     Document[]
+
+  @@index([status])
+  @@index([plan])
+  @@map("clients")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(PLANNING)
+  progress    Int           @default(0)
+  budget      Float?
+  spent       Float         @default(0)
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  clientId    String
+  leadId      String?       // assigned PM / lead
+  tags        String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  client     Client         @relation(fields: [clientId], references: [id])
+  tasks      ProjectTask[]
+  documents  Document[]
+  milestones Milestone[]
+
+  @@index([clientId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectTask {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  status      String   @default("todo") // todo | in_progress | done
+  assigneeId  String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_tasks")
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  projectId   String
+  title       String
+  dueDate     DateTime
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+// ── SUPPORT / TICKETS ────────────────────────────────────────
+
+model Ticket {
+  id           String         @id @default(cuid())
+  ticketNumber String         @unique
+  title        String
+  description  String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  clientId     String
+  assignedToId String?
+  createdById  String
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  tags         String[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  client     Client          @relation(fields: [clientId], references: [id])
+  assignedTo User?           @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  createdBy  User            @relation("CreatedTickets", fields: [createdById], references: [id])
+  comments   TicketComment[]
+  activities Activity[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([clientId])
+  @@map("tickets")
+}
+
+model TicketComment {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  body      String
+  isInternal Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("ticket_comments")
+}
+
+// ── DOCUMENTS ────────────────────────────────────────────────
+
+model Document {
+  id         String   @id @default(cuid())
+  name       String
+  fileType   String   // pdf | doc | xls | ppt | zip
+  fileSize   Int      // bytes
+  fileUrl    String
+  clientId   String?
+  projectId  String?
+  uploadedById String
+  isPublic   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  client    Client?  @relation(fields: [clientId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id])
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+
+  @@index([clientId])
+  @@map("documents")
+}
+
+// ── BILLING ──────────────────────────────────────────────────
+
+model Subscription {
+  id         String             @id @default(cuid())
+  clientId   String
+  plan       SubscriptionPlan
+  status     SubscriptionStatus @default(TRIAL)
+  mrr        Float
+  trialEnds  DateTime?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelledAt DateTime?
+  stripeSubId String?           @unique
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  client   Client    @relation(fields: [clientId], references: [id])
+  invoices Invoice[]
+
+  @@index([clientId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  clientId       String
+  subscriptionId String?
+  status         InvoiceStatus @default(DRAFT)
+  amount         Float
+  tax            Float         @default(0)
+  total          Float
+  currency       String        @default("USD")
+  dueDate        DateTime
+  paidAt         DateTime?
+  stripeInvoiceId String?
+  notes          String?
+  lineItems      Json          // [{ description, qty, unitPrice, amount }]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  client       Client        @relation(fields: [clientId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  payments     Payment[]
+
+  @@index([clientId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  amount        Float
+  currency      String        @default("USD")
+  status        PaymentStatus @default(PENDING)
+  method        String?       // card | bank_transfer | crypto
+  stripePayId   String?       @unique
+  failureReason String?
+  processedAt   DateTime?
+  createdAt     DateTime      @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+// ── NOTIFICATIONS ────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // success | warning | error | info
+  title       String
+  description String
+  read        Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ── AUDIT LOGS ───────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // CREATE | UPDATE | DELETE | VIEW | LOGIN | LOGOUT
+  resource   String   // Lead | Deal | Client | Invoice | etc.
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ── ANALYTICS SNAPSHOTS ──────────────────────────────────────
+
+model AnalyticsSnapshot {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  metric    String   // mrr | arr | leads | deals_won | churn | nps
+  value     Float
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@unique([date, metric])
+  @@index([metric, date])
+  @@map("analytics_snapshots")
+}
