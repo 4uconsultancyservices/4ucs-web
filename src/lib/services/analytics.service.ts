@@ -196,5 +196,5 @@ export async function writeAuditLog(data: {
   resourceId?: string; metadata?: Record<string, unknown>;
   ipAddress?: string; userAgent?: string;
 }) {
-  return prisma.auditLog.create({ data });
+  return prisma.auditLog.create({ data: data as any });
 }

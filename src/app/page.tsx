@@ -225,7 +225,7 @@ function TrustedCompanies() {
       <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 50% 50%,rgba(0,102,255,.04) 0%,transparent 70%)' }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center text-xs text-white/30 uppercase tracking-widest">
-          Trusted by the world's most innovative companies
+          Trusted by the world&apos;s most innovative companies
         </motion.p>
       </div>
       <div className="relative flex overflow-hidden">
@@ -318,7 +318,7 @@ function Solutions() {
               Built for every <span className="gradient-text">scale & stage</span>
             </motion.h2>
             <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: .2 }} className="text-white/50 mb-10 leading-relaxed">
-              Whether you're a startup hitting product-market fit or an enterprise orchestrating global operations — we have a solution engineered for your exact stage.
+              Whether you&apos;re a startup hitting product-market fit or an enterprise orchestrating global operations — we have a solution engineered for your exact stage.
             </motion.p>
             <div className="space-y-4">
               {[
@@ -609,7 +609,7 @@ function Testimonials() {
               <div className="w-12 h-12 rounded-2xl mb-8 flex items-center justify-center" style={{ background: `${cur.color}15`, border: `1px solid ${cur.color}25` }}>
                 <Quote className="w-6 h-6" style={{ color: cur.color }} />
               </div>
-              <p className="text-xl sm:text-2xl text-white/80 leading-relaxed font-light mb-8">"{cur.content}"</p>
+              <p className="text-xl sm:text-2xl text-white/80 leading-relaxed font-light mb-8">&quot;{cur.content}&quot;</p>
               <div className="flex items-center gap-1 mb-6">{Array.from({ length: cur.rating }).map((_, i) => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />)}</div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

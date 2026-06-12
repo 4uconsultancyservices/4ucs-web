@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
@@ -11,7 +11,7 @@ interface StatCardProps {
   prefix?: string;
   suffix?: string;
   color: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   index?: number;
   description?: string;
 }
@@ -71,7 +71,7 @@ export function ProgressBar({ label, value, max = 100, color = '#0066ff', suffix
 }
 
 interface ActivityItemProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   title: string;
   description: string;
   time: string;
